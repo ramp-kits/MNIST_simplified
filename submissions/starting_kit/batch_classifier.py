@@ -60,7 +60,7 @@ class BatchClassifier(object):
         return self.model.predict(X)
 
     def _build_model(self):
-        inp = Input((28, 28))
+        inp = Input((1, 28, 28))
         x = Flatten(name='flatten')(inp)
         x = Dense(100, activation='relu', name='fc1')(x)
         out = Dense(10, activation='softmax', name='predictions')(x)
