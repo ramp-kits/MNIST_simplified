@@ -13,7 +13,7 @@ def convert(ids, X, out_img_folder):
 url = 'https://s3.amazonaws.com/img-datasets/mnist.npz'
 f_name = os.path.basename(url)
 if not os.path.exists(f_name):
-    pythonprint('Downloading {} ...'.format(url))
+    print('Downloading {} ...'.format(url))
     call('wget {}'.format(url), shell=True)
 f = np.load(f_name)
 X_train = f['x_train']
