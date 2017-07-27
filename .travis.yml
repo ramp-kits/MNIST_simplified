@@ -15,6 +15,7 @@ install:
     - conda install --yes --quiet jupyter seaborn gitpython scikit-image
     - pip install tensorflow
     - pip install keras
+    - pip install joblib
     - pip install -q flake8
     - git clone https://github.com/paris-saclay-cds/ramp-workflow.git
     - cd ramp-workflow
