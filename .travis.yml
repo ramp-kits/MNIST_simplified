@@ -13,6 +13,7 @@ install:
     - source activate testenv
     - conda install --yes --quiet numpy scipy matplotlib scikit-learn pandas
     - conda install --yes --quiet jupyter seaborn gitpython scikit-image
+    - conda install --yes --quiet cloudpickle
     - pip install tensorflow
     - pip install keras
     - pip install joblib
