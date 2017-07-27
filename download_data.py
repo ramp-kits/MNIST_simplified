@@ -10,6 +10,7 @@ def convert(ids, X, out_img_folder):
     for id_, x in zip(ids, X):
         imsave('{}/{}.png'.format(out_img_folder, id_), x)
 
+
 url = 'https://s3.amazonaws.com/img-datasets/mnist.npz'
 f_name = os.path.basename(url)
 if not os.path.exists(f_name):
