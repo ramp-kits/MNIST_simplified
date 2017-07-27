@@ -70,5 +70,7 @@ class BatchClassifier(object):
             metrics=['accuracy'])
         return model
 
+
 def _get_nb_minibatches(nb_samples, batch_size):
-    return (nb_samples // batch_size) + (1 if (nb_samples % batch_size) > 0 else 0)
+    return (nb_samples // batch_size) +\
+        (1 if (nb_samples % batch_size) > 0 else 0)

@@ -11,9 +11,9 @@ def convert(ids, X, out_img_folder):
         imsave('{}/{}.png'.format(out_img_folder, id_), x)
 
 url = 'https://s3.amazonaws.com/img-datasets/mnist.npz'
-print('Downloading {} ...'.format(url))
 f_name = os.path.basename(url)
 if not os.path.exists(f_name):
+    pythonprint('Downloading {} ...'.format(url))
     call('wget {}'.format(url), shell=True)
 f = np.load(f_name)
 X_train = f['x_train']
@@ -28,5 +28,5 @@ print('Saving images in {}/<id>.png ...'.format(imgs_dir))
 if os.path.exists(imgs_dir):
     shutil.rmtree(imgs_dir)
 os.mkdir(imgs_dir)
-for id, x in zip(ids, X_train):
+for id, x in zip(ids, X_train[ids]):
     imsave('{}/{}.png'.format(imgs_dir, id), x)
