@@ -3,6 +3,7 @@ from keras.layers import Input
 from keras.layers import Dense
 from keras.layers import Flatten
 from keras.optimizers import SGD
+from rampwf.workflows.image_classifier import get_nb_minibatches
 
 
 class BatchClassifier(object):
@@ -16,7 +17,11 @@ class BatchClassifier(object):
                 batch_size=batch_size, valid_ratio=0.1)
         self.model.fit_generator(
             gen_train,
-            steps_per_epoch=_get_nb_minibatches(nb_train, batch_size),
+            # Total number of steps (batches of samples) to yield from
+            # generator before declaring one epoch finished and starting the
+            # next epoch. It should typically be equal to the number of unique
+            # samples of your dataset divided by the batch size.
+            steps_per_epoch=get_nb_minibatches(nb_train, batch_size),
             epochs=1,
             # In parallel to training, a CPU process loads and preprocesses
             # data from disk and put it into a queue in the form of
@@ -52,7 +57,7 @@ class BatchClassifier(object):
             workers=1,
             use_multiprocessing=True,
             validation_data=gen_valid,
-            validation_steps=_get_nb_minibatches(nb_valid, batch_size),
+            validation_steps=get_nb_minibatches(nb_valid, batch_size),
             verbose=1)
 
     def predict_proba(self, X):
@@ -69,8 +74,3 @@ class BatchClassifier(object):
             optimizer=SGD(lr=1e-4),
             metrics=['accuracy'])
         return model
-
-
-def _get_nb_minibatches(nb_samples, batch_size):
-    return (nb_samples // batch_size) +\
-        (1 if (nb_samples % batch_size) > 0 else 0)
