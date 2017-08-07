@@ -14,7 +14,6 @@ workflow = rw.workflows.ImageClassifier(
     test_batch_size=16,
     chunk_size=256,
     n_jobs=8,
-    img_file_extension='png',
     n_classes=len(_prediction_label_names),
 )
 

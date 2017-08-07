@@ -25,9 +25,11 @@ ids_test = df_test['id'].values
 ids = np.concatenate([ids_train, ids_test])
 
 imgs_dir = os.path.join('data', 'imgs')
-print('Saving images in {}/<id>.png ...'.format(imgs_dir))
+print('Saving images in {}/<id> ...'.format(imgs_dir))
 if os.path.exists(imgs_dir):
     shutil.rmtree(imgs_dir)
 os.mkdir(imgs_dir)
 for id, x in zip(ids, X_train[ids]):
     imsave('{}/{}.png'.format(imgs_dir, id), x)
+    # getting rid of extension
+    os.rename('{}/{}.png'.format(imgs_dir, id), '{}/{}'.format(imgs_dir, id))
