@@ -13,7 +13,7 @@ python download_data.py
 ```
 
 the first time. It will create `data/imgs` and download the images there
-using the names `<id>.png`, where `<id>`s are coming from `data/train.csv` and `data/test.csv`.
+using the names `<id>`, where `<id>`s are coming from `data/train.csv` and `data/test.csv`.
 
 
 Install ramp-workflow (rampwf), then execute
