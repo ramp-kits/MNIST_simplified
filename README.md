@@ -15,6 +15,11 @@ python download_data.py
 the first time. It will create `data/imgs` and download the images there
 using the names `<id>`, where `<id>`s are coming from `data/train.csv` and `data/test.csv`.
 
+Install keras like this (to get keras 2.0.6):
+
+```
+conda install -c conda-forge keras
+```
 
 Install ramp-workflow (rampwf), then execute
 
