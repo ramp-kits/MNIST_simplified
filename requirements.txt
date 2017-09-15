@@ -3,5 +3,6 @@ scikit-learn
 pandas
 matplotlib
 scikit-image
+joblib
 keras
 tensorflow
