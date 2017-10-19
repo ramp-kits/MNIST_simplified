@@ -29,12 +29,12 @@ class ImageClassifier(object):
         
         self.model.fit(X, Y, batch_size=32, validation_split=0.1, epochs=1)
 
-    def predict_proba(self, test_img_loader):
+    def predict_proba(self, img_loader):
         # load the full data into memory
-        nb = len(test_img_loader)
+        nb = len(img_loader)
         X = np.zeros((nb, 28, 28, 1))
         for i in range(nb):
-            X[i] = self.transform(test_img_loader.load(i))
+            X[i] = self.transform(img_loader.load(i))
         return self.model.predict(X)
 
     def _build_model(self):
