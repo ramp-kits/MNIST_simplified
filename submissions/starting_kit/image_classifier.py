@@ -7,7 +7,7 @@ from keras.layers import Flatten
 from keras.optimizers import SGD
 
 
-class BatchClassifier(object):
+class ImageClassifier(object):
 
     def __init__(self):
         self.model = self._build_model()
