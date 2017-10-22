@@ -21,7 +21,9 @@ class ImageClassifier(object):
             metrics=['accuracy'])
 
     def _transform(self, x):
+        # adding channel dimension at the last position
         x = np.expand_dims(x, axis=-1)
+        # bringing input between 0 and 1
         x = x / 255.
         return x
 

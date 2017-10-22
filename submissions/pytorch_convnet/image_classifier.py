@@ -67,7 +67,9 @@ class ImageClassifier(object):
             self.net = self.net.cuda()
 
     def _transform(self, x):
+        # adding channel dimension at the first position
         x = np.expand_dims(x, axis=0)
+        # bringing input between 0 and 1
         x = x / 255.
         return x
 
@@ -80,14 +82,23 @@ class ImageClassifier(object):
         n_minibatch_images = len(indexes)
         X = np.zeros((n_minibatch_images, 1, 28, 28), dtype=np.float32)
         # one-hot encoding of the labels to set NN target
-        y = np.zeros(n_minibatch_images)
-        for i in indexes:
-            x, y[i] = img_loader.load(i)
+        y = np.zeros(n_minibatch_images, dtype=np.int)
+        for i, i_load in enumerate(indexes):
+            x, y[i] = img_loader.load(i_load)
             X[i] = self._transform(x)
             # since labels are [0, ..., 9], label is the same as label index
         X = _make_variable(X)
         y = _make_variable(y)
         return X, y
+
+    def _load_test_minibatch(self, img_loader, indexes):
+        n_minibatch_images = len(indexes)
+        X = np.zeros((n_minibatch_images, 1, 28, 28), dtype=np.float32)
+        for i, i_load in enumerate(indexes):
+            x = img_loader.load(i_load)
+            X[i] = self._transform(x)
+        X = _make_variable(X)
+        return X
 
     def fit(self, img_loader):
         validation_split = 0.1
@@ -109,7 +120,7 @@ class ImageClassifier(object):
             n_images = len(img_loader) * (1 - validation_split)
             i = 0
             while i < n_images:
-                indexes = range(i, min(batch_size, n_images - i))
+                indexes = range(i, min(i + batch_size, n_images))
                 X, y = self._load_minibatch(img_loader, indexes)
                 i += len(indexes)
                 # zero-out the gradients because they accumulate by default
@@ -135,8 +146,8 @@ class ImageClassifier(object):
             valid_acc = []
             n_images = len(img_loader)
             while i < n_images:
-                indexes = range(i, min(batch_size, n_images - i))
-                X, y = self._load_minibatch(indexes)
+                indexes = range(i, min(i + batch_size, n_images))
+                X, y = self._load_minibatch(img_loader, indexes)
                 i += len(indexes)
                 y_pred = self.net(X)
                 valid_acc.extend(self._get_acc(y_pred, y))
@@ -148,11 +159,13 @@ class ImageClassifier(object):
             print('Valid acc : {:.4f}'.format(np.mean(valid_acc)))
 
     def predict_proba(self, img_loader):
-        nb = len(img_loader)
-        X = np.zeros((nb, 28, 28, 1))
-        for i in range(nb):
-            X[i] = self._transform(img_loader.load(i))
-        X = X.astype(np.float32)
-        X = _make_variable(X)
-        y_proba = nn.Softmax()(self.net(X)).cpu().data.numpy()
+        batch_size = 32
+        n_images = len(img_loader)
+        i = 0
+        y_proba = np.empty((n_images, 10))
+        while i < n_images:
+            indexes = range(i, min(i + batch_size, n_images))
+            X = self._load_test_minibatch(img_loader, indexes)
+            i += len(indexes)
+            y_proba[indexes] = nn.Softmax()(self.net(X)).cpu().data.numpy()
         return y_proba
