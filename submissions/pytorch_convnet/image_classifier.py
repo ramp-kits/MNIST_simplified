@@ -1,0 +1,158 @@
+from __future__ import division
+import time
+import math
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.autograd import Variable
+
+is_cuda = torch.cuda.is_available()
+
+
+def _make_variable(X):
+    variable = Variable(torch.from_numpy(X))
+    if is_cuda:
+        variable = variable.cuda()
+    return variable
+
+
+def _flatten(x):
+    return x.view(x.size(0), -1)
+
+
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.block1 = nn.Sequential(
+            nn.Conv2d(1, 32, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(32, 32, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+        self.fc = nn.Sequential(
+            nn.Linear(32 * 14 * 14, 512),
+            nn.ReLU(True),
+            nn.Linear(512, 10),
+        )
+        self._initialize_weights()
+
+    def forward(self, x):
+        x = self.block1(x)
+        x = _flatten(x)
+        x = self.fc(x)
+        return x
+
+    def _initialize_weights(self):
+        # Source: https://github.com/pytorch/vision/blob/master/torchvision/
+        # models/vgg.py
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+                if m.bias is not None:
+                    m.bias.data.zero_()
+            elif isinstance(m, nn.Linear):
+                n = m.weight.size(1)
+                m.weight.data.normal_(0, 0.01)
+                m.bias.data.zero_()
+
+
+class ImageClassifier(object):
+
+    def __init__(self):
+        self.net = Net()
+        if is_cuda:
+            self.net = self.net.cuda()
+
+    def _transform(self, x):
+        x = np.expand_dims(x, axis=0)
+        x = x / 255.
+        return x
+
+    def _get_acc(self, y_pred, y_true):
+        y_pred = y_pred.cpu().data.numpy().argmax(axis=1)
+        y_true = y_true.cpu().data.numpy()
+        return (y_pred == y_true)
+
+    def _load_minibatch(self, img_loader, indexes):
+        n_minibatch_images = len(indexes)
+        X = np.zeros((n_minibatch_images, 1, 28, 28), dtype=np.float32)
+        # one-hot encoding of the labels to set NN target
+        y = np.zeros(n_minibatch_images)
+        for i in indexes:
+            x, y[i] = img_loader.load(i)
+            X[i] = self._transform(x)
+            # since labels are [0, ..., 9], label is the same as label index
+        X = _make_variable(X)
+        y = _make_variable(y)
+        return X, y
+
+    def fit(self, img_loader):
+        validation_split = 0.1
+        batch_size = 32
+        nb_epochs = 1
+        lr = 1e-4
+        optimizer = optim.Adam(self.net.parameters(), lr=lr)
+        criterion = nn.CrossEntropyLoss().cuda()
+        if is_cuda:
+            criterion = criterion.cuda()
+
+        for epoch in range(nb_epochs):
+            t0 = time.time()
+            self.net.train()  # train mode
+            nb_trained = 0
+            nb_updates = 0
+            train_loss = []
+            train_acc = []
+            n_images = len(img_loader) * (1 - validation_split)
+            i = 0
+            while i < n_images:
+                indexes = range(i, min(batch_size, n_images - i))
+                X, y = self._load_minibatch(img_loader, indexes)
+                i += len(indexes)
+                # zero-out the gradients because they accumulate by default
+                optimizer.zero_grad()
+                y_pred = self.net(X)
+                loss = criterion(y_pred, y)
+                loss.backward()  # compute gradients
+                optimizer.step()  # update params
+
+                # Loss and accuracy
+                train_acc.extend(self._get_acc(y_pred, y))
+                train_loss.append(loss.data[0])
+                nb_trained += X.size(0)
+                nb_updates += 1
+                if nb_updates % 100 == 0:
+                    print(
+                        'Epoch [{}/{}], [trained {}/{}], avg_loss: {:.4f}'
+                        ', avg_train_acc: {:.4f}'.format(
+                            epoch + 1, nb_epochs, nb_trained, n_images,
+                            np.mean(train_loss), np.mean(train_acc)))
+
+            self.net.eval()  # eval mode
+            valid_acc = []
+            n_images = len(img_loader)
+            while i < n_images:
+                indexes = range(i, min(batch_size, n_images - i))
+                X, y = self._load_minibatch(indexes)
+                i += len(indexes)
+                y_pred = self.net(X)
+                valid_acc.extend(self._get_acc(y_pred, y))
+
+            delta_t = time.time() - t0
+            print('Finished epoch {}'.format(epoch + 1))
+            print('Time spent : {:.4f}'.format(delta_t))
+            print('Train acc : {:.4f}'.format(np.mean(train_acc)))
+            print('Valid acc : {:.4f}'.format(np.mean(valid_acc)))
+
+    def predict_proba(self, img_loader):
+        nb = len(img_loader)
+        X = np.zeros((nb, 28, 28, 1))
+        for i in range(nb):
+            X[i] = self._transform(img_loader.load(i))
+        X = X.astype(np.float32)
+        X = _make_variable(X)
+        y_proba = nn.Softmax()(self.net(X)).cpu().data.numpy()
+        return y_proba

@@ -3,21 +3,36 @@ import numpy as np
 from keras.models import Model
 from keras.layers import Input
 from keras.layers import Dense
+from keras.layers import Conv2D
+from keras.layers import MaxPooling2D
 from keras.layers import Flatten
-from keras.optimizers import SGD
-
+from keras.optimizers import Adam
 
 class ImageClassifier(object):
 
     def __init__(self):
         inp = Input((28, 28, 1))
-        x = Flatten(name='flatten')(inp)
-        x = Dense(100, activation='relu', name='fc1')(x)
+        # Block 1
+        x = Conv2D(
+            32, (3, 3), activation='relu', padding='same',
+            name='block1_conv1')(inp)
+        x = Conv2D(
+            32, (3, 3), activation='relu', padding='same',
+            name='block1_conv2')(x)
+        x = MaxPooling2D(
+            (2, 2), strides=(2, 2),
+            name='block1_pool')(x)
+        # dense
+        x = Flatten(
+            name='flatten')(x)
+        x = Dense(
+            512, activation='relu',
+            name='fc1')(x)
         out = Dense(10, activation='softmax', name='predictions')(x)
         self.model = Model(inp, out)
         self.model.compile(
             loss='categorical_crossentropy',
-            optimizer=SGD(lr=1e-4),
+            optimizer=Adam(lr=1e-4),
             metrics=['accuracy'])
 
     def _transform(self, x):
