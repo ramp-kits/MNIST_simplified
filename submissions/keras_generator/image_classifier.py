@@ -10,7 +10,6 @@ from rampwf.workflows.image_classifier import get_nb_minibatches
 
 
 class ImageClassifier(object):
-
     def __init__(self):
         inp = Input((28, 28, 1))
         x = Flatten(name='flatten')(inp)
@@ -34,16 +33,16 @@ class ImageClassifier(object):
         ind_valid = indices[nb_train:]
 
         gen_train = self._build_train_generator(
-            img_loader,
-            indices=ind_train,
-            batch_size=self.batch_size,
+            img_loader, 
+            indices=ind_train, 
+            batch_size=self.batch_size, 
             shuffle=True
         )
         gen_valid = self._build_train_generator(
-            img_loader,
-            indices=ind_valid,
+            img_loader, 
+            indices=ind_valid, 
             batch_size=self.batch_size,
-            shuffle=False
+            shuffle=True
         )
         self.model.fit_generator(
             gen_train,
