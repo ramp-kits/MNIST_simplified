@@ -58,7 +58,7 @@ class Net(nn.Module):
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
 
-
+                
 class ImageClassifier(object):
 
     def __init__(self):
@@ -79,24 +79,18 @@ class ImageClassifier(object):
         return (y_pred == y_true)
 
     def _load_minibatch(self, img_loader, indexes):
-        n_minibatch_images = len(indexes)
-        X = np.zeros((n_minibatch_images, 1, 28, 28), dtype=np.float32)
-        # one-hot encoding of the labels to set NN target
-        y = np.zeros(n_minibatch_images, dtype=np.int)
-        for i, i_load in enumerate(indexes):
-            x, y[i] = img_loader.load(i_load)
-            X[i] = self._transform(x)
-            # since labels are [0, ..., 9], label is the same as label index
+        transforms = [{'name': 'rotate', 'l_angle': -30, 'u_angle': 30}]
+        X, y = img_loader.parallel_load(indexes, transforms)
+        X = np.array([self._transform(x) for x in X], dtype=np.float32)
         X = _make_variable(X)
+        y = np.array(y)
         y = _make_variable(y)
         return X, y
 
     def _load_test_minibatch(self, img_loader, indexes):
         n_minibatch_images = len(indexes)
-        X = np.zeros((n_minibatch_images, 1, 28, 28), dtype=np.float32)
-        for i, i_load in enumerate(indexes):
-            x = img_loader.load(i_load)
-            X[i] = self._transform(x)
+        X = img_loader.parallel_load(indexes, transforms)
+        X = np.array([self._transform(x) for x in X], dtype=np.float32)
         X = _make_variable(X)
         return X
 
@@ -159,7 +153,6 @@ class ImageClassifier(object):
             print('Valid acc : {:.4f}'.format(np.mean(valid_acc)))
 
     def predict_proba(self, img_loader):
-        # We need to batch load also at test time
         batch_size = 32
         n_images = len(img_loader)
         i = 0
