@@ -58,7 +58,7 @@ class Net(nn.Module):
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
 
-                
+
 class ImageClassifier(object):
 
     def __init__(self):
@@ -88,8 +88,7 @@ class ImageClassifier(object):
         return X, y
 
     def _load_test_minibatch(self, img_loader, indexes):
-        n_minibatch_images = len(indexes)
-        X = img_loader.parallel_load(indexes, transforms)
+        X = img_loader.parallel_load(indexes)
         X = np.array([self._transform(x) for x in X], dtype=np.float32)
         X = _make_variable(X)
         return X
