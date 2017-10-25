@@ -110,7 +110,7 @@ class ImageClassifier(object):
             nb_updates = 0
             train_loss = []
             train_acc = []
-            n_images = len(img_loader) * (1 - validation_split)
+            n_images = int(len(img_loader) * (1 - validation_split))
             i = 0
             while i < n_images:
                 indexes = range(i, min(i + batch_size, n_images))
