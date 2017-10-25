@@ -33,14 +33,14 @@ class ImageClassifier(object):
         ind_valid = indices[nb_train:]
 
         gen_train = self._build_train_generator(
-            img_loader, 
-            indices=ind_train, 
-            batch_size=self.batch_size, 
+            img_loader,
+            indices=ind_train,
+            batch_size=self.batch_size,
             shuffle=True
         )
         gen_valid = self._build_train_generator(
-            img_loader, 
-            indices=ind_valid, 
+            img_loader,
+            indices=ind_valid,
             batch_size=self.batch_size,
             shuffle=True
         )

@@ -8,6 +8,7 @@ from keras.layers import MaxPooling2D
 from keras.layers import Flatten
 from keras.optimizers import Adam
 
+
 class ImageClassifier(object):
 
     def __init__(self):
